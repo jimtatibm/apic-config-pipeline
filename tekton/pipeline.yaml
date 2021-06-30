@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: apic-post-install-config
+spec:
+  params:
+  tasks:
+    - name: apic-post-install-config
+      params:
+      - name: git-url
+        value: 'https://github.ibm.com/ALMARAZJ/apic-config.git'
+      taskRef:
+        name: apic-post-install-config
