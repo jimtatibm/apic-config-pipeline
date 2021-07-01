@@ -49,7 +49,7 @@ echo "\"APIC_ADMIN_PASSWORD\":\"${APIC_ADMIN_PASSWORD}\"" >> config.json
 echo "}" >> config.json
 
 # Login to IBM API Connect Cloud Manager through the APIC CLI
-./apic-slim login --server ${APIC_ADMIN_URL} --username admin --password ''"${APIC_ADMIN_PASSWORD}"'' --realm admin/default-idp-1 --accept-license
+./apic-slim login --server ${APIC_ADMIN_URL} --username admin --password ''"${APIC_ADMIN_PASSWORD}"'' --realm admin/default-idp-1 --accept-license > /dev/null
 if [[ $? -ne 0 ]]; then echo "[ERROR][config.sh] - An error ocurred login into IBM API Connect using the APIC CLI"; exit 1; fi
 
 # Get the toolkit credentials
@@ -57,9 +57,12 @@ if [[ $? -ne 0 ]]; then echo "[ERROR][config.sh] - An error ocurred login into I
 if [[ $? -ne 0 ]]; then echo "[ERROR][config.sh] - An error ocurred getting the IBM API Connect Toolkit Credentials using the APIC CLI"; exit 1; fi
 
 # DEBUG information
-echo "This is the environment configuration"
-echo "-------------------------------------"
-cat config.json
-echo "These are the IBM API Connect ToolKit Credentials"
-echo "-------------------------------------------------"
-cat toolkit-creds.json
+if [[ ! -z "${DEBUG}" ]]
+then
+  echo "This is the environment configuration"
+  echo "-------------------------------------"
+  cat config.json
+  echo "These are the IBM API Connect ToolKit Credentials"
+  echo "-------------------------------------------------"
+  cat toolkit-creds.json
+fi
