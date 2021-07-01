@@ -9,7 +9,8 @@ API Connect v10 post install configuration steps --> https://www.ibm.com/docs/en
 """
 
 FILE_NAME = "config_apicv10.py"
-INFO = "[INFO]["+ FILE_NAME +"] - " 
+STEP = 1
+INFO = "[INFO]["+ FILE_NAME +"][STEP " + str(STEP) + "] - " 
 DEBUG = os.getenv('DEBUG','')
 
 try:
@@ -31,7 +32,8 @@ try:
 ###############################################################
 # Step 2 - Get the IBM API Connect Cloud Manager Bearer Token #
 ###############################################################
-
+    STEP = 2
+    
     admin_bearer_token = utils.get_bearer_token(environment_config["APIC_ADMIN_URL"],
                                                     "admin",
                                                     environment_config["APIC_ADMIN_PASSWORD"],
@@ -46,12 +48,16 @@ try:
 #################################
 # Step 3 - Get the Admin org ID #
 #################################
+    STEP = 3
+    
     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+
     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+    
     found = False
     admin_org_id = ''
     if response.status_code != 200:
-          raise Exception("Return code for getting getting the Admin org ID isn't 200. It is " + str(response.status_code))
+          raise Exception("Return code for getting the Admin org ID isn't 200. It is " + str(response.status_code))
     for org in response.json()['results']:
         if org['org_type'] == "admin":
             found = True
@@ -64,8 +70,11 @@ try:
 ####################################
 # Step 4 - Create the Email Server #
 ####################################
-
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+    STEP = 4
+    
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/mail-servers'
+    
+    # Create the data object
     data = {}
     data['title'] = 'Default Email Server'
     data['name'] = 'default-email-server'
@@ -78,29 +87,20 @@ try:
     data['tls_client_profile_url'] = None
     data['secure'] = False
 
-    print('11111111111111111111111')
-    print("Type of data", type(data))
-    print("This is data")
-    print(data)
-    # print("json.load()")
-    # print(json.load(data))
-    print("json.dumps()")
-    print(json.dumps(data))
+    if DEBUG:
+        print(INFO + "This is the data object:")
+        print(INFO, data)
+        print(INFO + "This is the JSON dump:")
+        print(INFO, json.dumps(data))
 
+    response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
 
-    # response = api_calls.make_api_call(url, admin_bearer_token, 'get')
-    # found = False
-    # admin_org_id = ''
-    # if response.status_code != 200:
-    #       raise Exception("Return code for getting getting the Admin org ID isn't 200. It is " + str(response.status_code))
-    # for org in response.json()['results']:
-    #     if org['org_type'] == "admin":
-    #         found = True
-    #         admin_org_id = org['id']
-    # if not found:
-    #     raise Exception("[ERROR] - The Admin Organization was not found in the IBM API Connect Cluster instance")
-    # if DEBUG:
-    #     print(INFO + "Admin Org ID: " + admin_org_id)
+    email_server_url = ''
+    if response.status_code != 201:
+          raise Exception("Return code for creating the Email Server isn't 201. It is " + str(response.status_code))
+    email_server_url = response.json()[url]
+    if DEBUG:
+        print(INFO + "Email Server url: " + email_server_url)
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
