@@ -27,7 +27,7 @@ def get_env_config(CONFIG_FILES_DIR):
 def get_bearer_token(apic_url, apic_username, apic_password, apic_realm, apic_rest_clientid, apic_rest_clientsecret): 
 
     try:
-        url = apic_url + "/api/token"
+        url = "https://" + apic_url + "/api/token"
         reqheaders = {
             "Content-Type" : "application/json",
             "Accept" : "application/json"
@@ -48,7 +48,7 @@ def get_bearer_token(apic_url, apic_username, apic_password, apic_realm, apic_re
         print(INFO + "Client ID:", apic_rest_clientid)
         s = requests.Session()
         retries = Retry(total=3, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
-        s.mount(apic_url, HTTPAdapter(max_retries=retries))
+        s.mount(url, HTTPAdapter(max_retries=retries))
 
         response = s.post(url, headers=reqheaders, json=reqJson, verify=False, timeout=20)
         print("this is the response's status_code", response.status_code)
