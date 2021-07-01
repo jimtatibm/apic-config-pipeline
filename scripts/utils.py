@@ -15,6 +15,15 @@ def get_toolkit_credentials(CONFIG_FILES_DIR):
         toolkit_credentials = {}
     return toolkit_credentials
 
+def get_env_config(CONFIG_FILES_DIR):
+    env_config = None
+    if os.path.isfile(CONFIG_FILES_DIR + "/config.json"):
+        with open(CONFIG_FILES_DIR + "/config.json") as f:
+            env_config = json.load(f)
+    else:
+        env_config = {}
+    return env_config
+
 def get_bearer_token(apic_url, apic_username, apic_password, apic_realm, apic_rest_clientid, apic_rest_clientsecret): 
 
     try:
