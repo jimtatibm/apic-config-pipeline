@@ -61,5 +61,46 @@ try:
     if DEBUG:
         print(INFO + "Admin Org ID: " + admin_org_id)
 
+####################################
+# Step 4 - Create the Email Server #
+####################################
+
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+    data = {}
+    data['title'] = 'Default Email Server'
+    data['name'] = 'default-email-server'
+    data['host'] = os.environ['EMAIL_HOST']
+    data['port'] = int(os.environ['EMAIL_PORT'])
+    credentials = {}
+    credentials['username'] = os.environ['EMAIL_USERNAME']
+    credentials['password'] = os.environ['EMAIL_PASSWORD']
+    data['credentials'] = credentials
+    data['tls_client_profile_url'] = None
+    data['secure'] = False
+
+    print('11111111111111111111111')
+    print("Type of data", type(data))
+    print("This is data")
+    print(data)
+    # print("json.load()")
+    # print(json.load(data))
+    print("json.dumps()")
+    print(json.dumps(data))
+
+
+    # response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+    # found = False
+    # admin_org_id = ''
+    # if response.status_code != 200:
+    #       raise Exception("Return code for getting getting the Admin org ID isn't 200. It is " + str(response.status_code))
+    # for org in response.json()['results']:
+    #     if org['org_type'] == "admin":
+    #         found = True
+    #         admin_org_id = org['id']
+    # if not found:
+    #     raise Exception("[ERROR] - The Admin Organization was not found in the IBM API Connect Cluster instance")
+    # if DEBUG:
+    #     print(INFO + "Admin Org ID: " + admin_org_id)
+
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
