@@ -25,6 +25,22 @@ def get_env_config(CONFIG_FILES_DIR):
         env_config = {}
     return env_config
 
+def pretty_print_request(req):
+    """
+    At this point it is completely built and ready
+    to be fired; it is "prepared".
+
+    However pay attention at the formatting used in 
+    this function because it is programmed to be pretty 
+    printed and may differ from the actual request.
+    """
+    print(INFO + "---------- Request start ----------")
+    print(INFO + req.method + ' ' + req.url)
+    for k, v in req.headers.items():
+        print(INFO + '{}: {}'.format(k, v))
+    print(INFO, req.body)
+    print(INFO + "---------- Request end ----------")
+
 def get_bearer_token(apic_url, apic_username, apic_password, apic_realm, apic_rest_clientid, apic_rest_clientsecret): 
 
     try:
@@ -54,8 +70,10 @@ def get_bearer_token(apic_url, apic_username, apic_password, apic_realm, apic_re
         response = s.post(url, headers=reqheaders, json=reqJson, verify=False, timeout=20)
         resp_json = response.json()
         if DEBUG:
-          print(INFO + "This is the response's status_code", response.status_code)
-          print(INFO + "This is the response in json", resp_json)
+          print(INFO + "This is the request made:")
+          print(pretty_print_request(response.request))
+          print(INFO + "This is the response's status_code:", response.status_code)
+          print(INFO + "This is the response in json:", resp_json)
         if response.status_code != 200:
           raise Exception("Return code for getting the Bearer token isn't 200. It is " + str(response.status_code))
         return resp_json['access_token']
