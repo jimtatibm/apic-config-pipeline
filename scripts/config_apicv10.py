@@ -48,10 +48,18 @@ try:
 #################################
     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+    found = False
+    admin_org_id = ''
+    if response.status_code != 200:
+          raise Exception("Return code for getting getting the Admin org ID isn't 200. It is " + str(response.status_code))
+    for org in response.json()['results']:
+        if org['org_type'] == "admin":
+            found = True
+            admin_org_id = org['id']
+    if not found:
+        raise Exception("[ERROR] - The Admin Organization was not found in the IBM API Connect Cluster instance")
     if DEBUG:
-        print("TEST TEST TEST TEST TEST")
-        print(INFO + "This is the response's status_code", response.status_code)
-        print(INFO + "This is the response in json", json.dumps(response.json(), indent=4, sort_keys=False))
+        print(INFO + "Admin Org ID: " + admin_org_id)
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
