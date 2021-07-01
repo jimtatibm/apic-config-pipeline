@@ -1,6 +1,6 @@
 import os, json
 import utils
-# import admin_api_calls
+import api_calls
 
 """
 
@@ -46,8 +46,12 @@ try:
 #################################
 # Step 3 - Get the Admin org ID #
 #################################
-    # admin_org_id = admin_api_calls.get_admin_org_id(os.environ["APIC_ADMIN_URL"],
-    #                                                 admin_bearer_token)
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+    if DEBUG:
+        print("TEST TEST TEST TEST TEST")
+        print(INFO + "This is the response's status_code", response.status_code)
+        print(INFO + "This is the response in json", json.dumps(response.json(), indent=4, sort_keys=False))
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
