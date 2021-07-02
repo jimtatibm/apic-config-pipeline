@@ -247,29 +247,56 @@ try:
 #     if DEBUG:
 #         print(info(6) + "Default Analytics Service url: " + analytics_service_url)
 
-#############################################################################
-# Step 8 - Associate Default Analytics Service with Default Gateway Service #
-#############################################################################
+# #############################################################################
+# # Step 8 - Associate Default Analytics Service with Default Gateway Service #
+# #############################################################################
 
-    # For test
-    analytics_service_url = "https://apic-produ-27421282-admin-prod.cp4i-apic-gitops-2b2c5917db6d4ef128f8227d49c11e07-0000.us-east.containers.appdomain.cloud/api/orgs/1c74fee3-11ff-4ee2-a63e-e8bc594d6a2c/availability-zones/3bcb5c83-9a1b-4f87-ac13-0024b6e7d003/analytics-services/33b7587b-31ba-4269-9577-e608d33846c8"
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/gateway-services/default-gateway-service'
+    
+#     # Create the data object
+#     data = {}
+#     data['analytics_service_url'] = analytics_service_url
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/gateway-services/default-gateway-service'
+#     if DEBUG:
+#         print(info(8) + "This is the data object:")
+#         print(info(8), data)
+#         print(info(8) + "This is the JSON dump:")
+#         print(info(8), json.dumps(data))
+
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'patch', data)
+
+#     if response.status_code != 200:
+#           raise Exception("Return code for associating the Default Analytics Service with the Default Gateway Service isn't 200. It is " + str(response.status_code))
+
+################################################
+# Step 9 - Register the Default Portal Service #
+################################################
+
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/portal-services'
     
     # Create the data object
     data = {}
-    data['analytics_service_url'] = analytics_service_url
+    data['title'] = "Default Portal Service"
+    data['name'] = "default-portal-service"
+    data['summary'] = "Default Portal Service that comes out of the box with API Connect Cluster v10"
+    data['endpoint'] = 'https://' + environment_config["APIC_PORTAL_DIRECTOR_URL"]
+    data['web_endpoint_base'] = 'https://' + environment_config["APIC_PORTAL_WEB_URL"]
+    visibility = {}
+    visibility['group_urls'] = None
+    visibility['org_urls'] = None
+    visibility['type'] = 'public'
+    data['visibility'] = visibility
 
     if DEBUG:
-        print(info(8) + "This is the data object:")
-        print(info(8), data)
-        print(info(8) + "This is the JSON dump:")
-        print(info(8), json.dumps(data))
+        print(info(9) + "This is the data object:")
+        print(info(9), data)
+        print(info(9) + "This is the JSON dump:")
+        print(info(9), json.dumps(data))
 
-    response = api_calls.make_api_call(url, admin_bearer_token, 'patch', data)
+    response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
 
-    if response.status_code != 200:
-          raise Exception("Return code for associating the Default Analytics Service with the Default Gateway Service isn't 200. It is " + str(response.status_code))
+    if response.status_code != 201:
+          raise Exception("Return code for registering the Default Portal Service isn't 201. It is " + str(response.status_code))
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
