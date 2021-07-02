@@ -34,49 +34,49 @@ try:
         print(info(1) + "--------------------------------------")
         print(info(1), json.dumps(environment_config, indent=4, sort_keys=False))
 
-###############################################################
-# Step 2 - Get the IBM API Connect Cloud Manager Bearer Token #
-###############################################################
+# ##################################################################
+# # Step 2 - Get the IBM API Connect Cloud Management Bearer Token #
+# ##################################################################
 
-    print(info(2) + "###############################################################")
-    print(info(2) + "# Step 2 - Get the IBM API Connect Cloud Manager Bearer Token #")
-    print(info(2) + "###############################################################")
+#     print(info(2) + "##################################################################")
+#     print(info(2) + "# Step 2 - Get the IBM API Connect Cloud Management Bearer Token #")
+#     print(info(2) + "##################################################################")
     
-    admin_bearer_token = utils.get_bearer_token(environment_config["APIC_ADMIN_URL"],
-                                                    "admin",
-                                                    environment_config["APIC_ADMIN_PASSWORD"],
-                                                    "admin/default-idp-1",
-                                                    toolkit_credentials["toolkit"]["client_id"],
-                                                    toolkit_credentials["toolkit"]["client_secret"])
-    if DEBUG:
-        print(info(2) + "This is the Bearer Token to work against the IBM API Connect Management endpoints")
-        print(info(2) + "---------------------------------------------------------------------------------")
-        print(info(2), admin_bearer_token)
+#     admin_bearer_token = api_calls.get_bearer_token(environment_config["APIC_ADMIN_URL"],
+#                                                     "admin",
+#                                                     environment_config["APIC_ADMIN_PASSWORD"],
+#                                                     "admin/default-idp-1",
+#                                                     toolkit_credentials["toolkit"]["client_id"],
+#                                                     toolkit_credentials["toolkit"]["client_secret"])
+#     if DEBUG:
+#         print(info(2) + "This is the Bearer Token to work against the IBM API Connect Cloud Management endpoints")
+#         print(info(2) + "--------------------------------------------------------------------------------------")
+#         print(info(2), admin_bearer_token)
 
-#################################
-# Step 3 - Get the Admin org ID #
-#################################
+# #################################
+# # Step 3 - Get the Admin org ID #
+# #################################
 
-    print(info(3) + "#################################")
-    print(info(3) + "# Step 3 - Get the Admin org ID #")
-    print(info(3) + "#################################")
+#     print(info(3) + "#################################")
+#     print(info(3) + "# Step 3 - Get the Admin org ID #")
+#     print(info(3) + "#################################")
     
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
 
-    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
     
-    found = False
-    admin_org_id = ''
-    if response.status_code != 200:
-          raise Exception("Return code for getting the Admin org ID isn't 200. It is " + str(response.status_code))
-    for org in response.json()['results']:
-        if org['org_type'] == "admin":
-            found = True
-            admin_org_id = org['id']
-    if not found:
-        raise Exception("[ERROR] - The Admin Organization was not found in the IBM API Connect Cluster instance")
-    if DEBUG:
-        print(info(3) + "Admin Org ID: " + admin_org_id)
+#     found = False
+#     admin_org_id = ''
+#     if response.status_code != 200:
+#           raise Exception("Return code for getting the Admin org ID isn't 200. It is " + str(response.status_code))
+#     for org in response.json()['results']:
+#         if org['org_type'] == "admin":
+#             found = True
+#             admin_org_id = org['id']
+#     if not found:
+#         raise Exception("[ERROR] - The Admin Organization was not found in the IBM API Connect Cluster instance")
+#     if DEBUG:
+#         print(info(3) + "Admin Org ID: " + admin_org_id)
 
 # ####################################
 # # Step 4 - Create the Email Server #
@@ -242,6 +242,10 @@ try:
 #     if response.status_code != 201:
 #           raise Exception("Return code for registering the Default Gateway Service isn't 201. It is " + str(response.status_code))
 
+#     # This will be needed in the last step when we associate this Gateway Service to the Sandbox catalog
+#     gateway_service_id = response.json()['id']
+#     if DEBUG:
+#         print(info(6) + "Default Gateway Service ID: " + gateway_service_id)
 
 # ###################################################
 # # Step 7 - Register the Default Analytics Service #
@@ -334,78 +338,176 @@ try:
 #     if response.status_code != 201:
 #           raise Exception("Return code for registering the Default Portal Service isn't 201. It is " + str(response.status_code))
 
-############################################
-# Step 10 - Create a Provider Organization #
-############################################
+# ############################################
+# # Step 10 - Create a Provider Organization #
+# ############################################
 
-    print(info(10) + "############################################")
-    print(info(10) + "# Step 10 - Create a Provider Organization #")
-    print(info(10) + "############################################")
+#     print(info(10) + "############################################")
+#     print(info(10) + "# Step 10 - Create a Provider Organization #")
+#     print(info(10) + "############################################")
 
-    # First, we need to get the user registries so that we can create a new user who will be the Provider Organization Owner
+#     # First, we need to get the user registries so that we can create a new user who will be the Provider Organization Owner
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/settings/user-registries'
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/settings/user-registries'
+
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+
+#     if response.status_code != 200:
+#           raise Exception("Return code for retrieving the user registries isn't 200. It is " + str(response.status_code))
+    
+#     provider_user_registry_default_url = response.json()['provider_user_registry_default_url']
+#     if DEBUG:
+#         print(info(10) + "Default Provider User Registry url: " + provider_user_registry_default_url)
+
+#     # Then, we need to register the user that will be the Provider Organization owner
+
+#     url = provider_user_registry_default_url + '/users'
+
+#     # Create the data object
+#     # Ideally this could also be loaded from a sealed secret.
+#     # Using defaults for now.
+#     data = {}
+#     data['username'] = 'testorgadmin'
+#     data['email'] = 'test@test.com'
+#     data['first_name'] = 'A_Name'
+#     data['last_name'] = 'A_Last_Name'
+#     data['password'] = 'passw0rd'
+
+#     if DEBUG:
+#         print(info(10) + "This is the data object:")
+#         print(info(10), data)
+#         print(info(10) + "This is the JSON dump:")
+#         print(info(10), json.dumps(data))
+
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
+
+#     if response.status_code != 201:
+#           raise Exception("Return code for registering the provider organization owner user isn't 201. It is " + str(response.status_code))
+    
+#     owner_url = response.json()['url']
+#     if DEBUG:
+#         print(info(10) + "Provider Organization Owner url: " + owner_url)
+    
+#     # Finally, we can create the Provider Organization with the previous owner
+
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+
+#     # Create the data object
+#     # Ideally this could also be loaded from a sealed secret.
+#     # Using defaults for now.
+#     data = {}
+#     data['title'] = 'Test Org'
+#     data['name'] = 'test-org'
+#     data['owner_url'] = owner_url
+
+#     if DEBUG:
+#         print(info(10) + "This is the data object:")
+#         print(info(10), data)
+#         print(info(10) + "This is the JSON dump:")
+#         print(info(10), json.dumps(data))
+
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
+
+#     if response.status_code != 201:
+#           raise Exception("Return code for creating the provider organization isn't 201. It is " + str(response.status_code))
+
+###############################################################
+# Step 11 - Get the IBM API Connect Provider API Bearer Token #
+###############################################################
+
+    print(info(11) + "###############################################################")
+    print(info(11) + "# Step 11 - Get the IBM API Connect Provider API Bearer Token #")
+    print(info(11) + "###############################################################")
+    
+    # Ideally, the username and password for getting the Bearer Token below would come from a sealed secret (that woul also be used
+    # in the previous step 10 when registering the new user for the provider organization owner)
+    # Using defaults for now.
+    admin_bearer_token = api_calls.get_bearer_token(environment_config["APIC_API_MANAGER_URL"],
+                                                    "testorgadmin",
+                                                    "passw0rd",
+                                                    "provider/default-idp-2",
+                                                    toolkit_credentials["toolkit"]["client_id"],
+                                                    toolkit_credentials["toolkit"]["client_secret"])
+    if DEBUG:
+        print(info(11) + "This is the Bearer Token to work against the IBM API Connect API Management endpoints")
+        print(info(11) + "-------------------------------------------------------------------------------------")
+        print(info(11), admin_bearer_token)
+
+#########################################################################
+# Step 12 - Associate Default Gateway Services with the Sandbox catalog #
+#########################################################################
+
+    print(info(12) + "#########################################################################")
+    print(info(12) + "# Step 12 - Associate Default Gateway Services with the Sandbox catalog #")
+    print(info(12) + "#########################################################################")
+
+    # First, we need to get the organization ID
+
+    url = 'https://' + environment_config["APIC_API_MANAGER_URL"] + '/api/orgs'
 
     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
-
+    
+    found = False
+    provider_org_id = ''
     if response.status_code != 200:
-          raise Exception("Return code for retrieving the user registries isn't 200. It is " + str(response.status_code))
-    
-    provider_user_registry_default_url = response.json()['provider_user_registry_default_url']
+          raise Exception("Return code for getting the Provider Org ID isn't 200. It is " + str(response.status_code))
+    for org in response.json()['results']:
+        if org['org_type'] == "provider":
+            found = True
+            provider_org_id = org['id']
+    if not found:
+        raise Exception("[ERROR] - The Provider Organization was not found in the IBM API Connect Cluster instance")
     if DEBUG:
-        print(info(10) + "Default Provider User Registry url: " + provider_user_registry_default_url)
+        print(info(12) + "Provider Org ID: " + provider_org_id)
 
-    # Then, we need to register the user that will be the Provider Organization owner
+    # Then, we need to get the Sandbox catalog ID
 
-    url = provider_user_registry_default_url + '/users'
+    url = 'https://' + environment_config["APIC_API_MANAGER_URL"] + '/api/orgs/' + provider_org_id + '/catalogs'
+
+    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+    
+    found = False
+    catalog_id = ''
+    if response.status_code != 200:
+          raise Exception("Return code for getting the Sandbox catalog ID isn't 200. It is " + str(response.status_code))
+    for catalog in response.json()['results']:
+        if catalog['name'] == "sandbox":
+            found = True
+            catalog_id = catalog['id']
+    if not found:
+        raise Exception("[ERROR] - The Sandbox catalog was not found in the IBM API Connect Cluster instance")
+    if DEBUG:
+        print(info(12) + "Sandbox catalog ID: " + catalog_id)
+
+    # Finally, we can associate the Default Gateway Service to the Sandbox catalog
+
+    url = 'https://' + environment_config["APIC_API_MANAGER_URL"] + '/api/catalogs/' + provider_org_id + '/' + catalog_id + '/configured-gateway-services'
 
     # Create the data object
     # Ideally this could also be loaded from a sealed secret.
     # Using defaults for now.
+    gateway_service_url = 'https://' + environment_config["APIC_API_MANAGER_URL"] + '/api/orgs/' + provider_org_id + '/gateway-services/' + gateway_service_id
     data = {}
-    data['username'] = 'testorgadmin'
-    data['email'] = 'test@test.com'
-    data['first_name'] = 'A_Name'
-    data['last_name'] = 'A_Last_Name'
-    data['password'] = 'passw0rd'
+    data['gateway_service_url'] = gateway_service_url
 
     if DEBUG:
-        print(info(10) + "This is the data object:")
-        print(info(10), data)
-        print(info(10) + "This is the JSON dump:")
-        print(info(10), json.dumps(data))
+        print(info(12) + "This is the data object:")
+        print(info(12), data)
+        print(info(12) + "This is the JSON dump:")
+        print(info(12), json.dumps(data))
 
     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
 
     if response.status_code != 201:
-          raise Exception("Return code for registering the provider organization owner user isn't 201. It is " + str(response.status_code))
-    
-    owner_url = response.json()['url']
-    if DEBUG:
-        print(info(10) + "Provider Organization Owner url: " + owner_url)
-    
-    # Finally, we can create the Provider Organization with the previous owner
+          raise Exception("Return code for associating the Default Gateway Service to the Sandbox catalog isn't 201. It is " + str(response.status_code))
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+#######
+# END #
+#######
 
-    # Create the data object
-    # Ideally this could also be loaded from a sealed secret.
-    # Using defaults for now.
-    data = {}
-    data['title'] = 'Test Org'
-    data['name'] = 'test-org'
-    data['owner_url'] = owner_url
-
-    if DEBUG:
-        print(info(10) + "This is the data object:")
-        print(info(10), data)
-        print(info(10) + "This is the JSON dump:")
-        print(info(10), json.dumps(data))
-
-    response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
-
-    if response.status_code != 201:
-          raise Exception("Return code for creating the provider organization isn't 201. It is " + str(response.status_code))
+    print("#######")
+    print("# END #")
+    print("#######")
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
