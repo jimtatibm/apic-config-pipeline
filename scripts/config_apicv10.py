@@ -125,98 +125,123 @@ try:
 #     if response.status_code != 200:
 #           raise Exception("Return code for Sender and Email Server configuration isn't 200. It is " + str(response.status_code))
 
-#######################################
-# Step 6 - Register a Gateway Service #
-#######################################
+# #################################################
+# # Step 6 - Register the Default Gateway Service #
+# #################################################
 
-    # First, we need to get the Datapower API Gateway instances details
+#     # First, we need to get the Datapower API Gateway instances details
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/integrations/gateway-service/datapower-api-gateway'
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/integrations/gateway-service/datapower-api-gateway'
 
-    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
 
-    if response.status_code != 200:
-          raise Exception("Return code for getting the Datapower API Gateway instances details isn't 200. It is " + str(response.status_code))
+#     if response.status_code != 200:
+#           raise Exception("Return code for getting the Datapower API Gateway instances details isn't 200. It is " + str(response.status_code))
 
-    datapower_api_gateway_url = response.json()['url']
-    if DEBUG:
-        print(info(6) + "Email Server url: " + datapower_api_gateway_url)
+#     datapower_api_gateway_url = response.json()['url']
+#     if DEBUG:
+#         print(info(6) + "Email Server url: " + datapower_api_gateway_url)
 
-    # Second, we need to get the TLS server profiles
+#     # Second, we need to get the TLS server profiles
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/tls-server-profiles'
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/tls-server-profiles'
 
-    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
 
-    found = False
-    tls_server_profile_url = ''
-    if response.status_code != 200:
-          raise Exception("Return code for getting the TLS server profiles isn't 200. It is " + str(response.status_code))
-    for profile in response.json()['results']:
-        if profile['name'] == "tls-server-profile-default":
-            found = True
-            tls_server_profile_url = profile['url']
-    if not found:
-        raise Exception("[ERROR] - The default TLS server profile was not found in the IBM API Connect Cluster instance")
+#     found = False
+#     tls_server_profile_url = ''
+#     if response.status_code != 200:
+#           raise Exception("Return code for getting the TLS server profiles isn't 200. It is " + str(response.status_code))
+#     for profile in response.json()['results']:
+#         if profile['name'] == "tls-server-profile-default":
+#             found = True
+#             tls_server_profile_url = profile['url']
+#     if not found:
+#         raise Exception("[ERROR] - The default TLS server profile was not found in the IBM API Connect Cluster instance")
 
-    if DEBUG:
-        print(info(6) + "Default TLS server profile url: " + tls_server_profile_url)
+#     if DEBUG:
+#         print(info(6) + "Default TLS server profile url: " + tls_server_profile_url)
 
-    # Third, we need to get the TLS client profiles
+#     # Third, we need to get the TLS client profiles
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/tls-client-profiles'
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/tls-client-profiles'
 
-    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'get')
 
-    found = False
-    tls_client_profile_url = ''
-    if response.status_code != 200:
-          raise Exception("Return code for getting the TLS client profiles isn't 200. It is " + str(response.status_code))
-    for profile in response.json()['results']:
-        if profile['name'] == "gateway-management-client-default":
-            found = True
-            tls_client_profile_url = profile['url']
-    if not found:
-        raise Exception("[ERROR] - The Gateway Management TLS client profile was not found in the IBM API Connect Cluster instance")
+#     found = False
+#     tls_client_profile_url = ''
+#     if response.status_code != 200:
+#           raise Exception("Return code for getting the TLS client profiles isn't 200. It is " + str(response.status_code))
+#     for profile in response.json()['results']:
+#         if profile['name'] == "gateway-management-client-default":
+#             found = True
+#             tls_client_profile_url = profile['url']
+#     if not found:
+#         raise Exception("[ERROR] - The Gateway Management TLS client profile was not found in the IBM API Connect Cluster instance")
 
-    if DEBUG:
-        print(info(6) + "Gateway Management TLS server profile url: " + tls_client_profile_url)
+#     if DEBUG:
+#         print(info(6) + "Gateway Management TLS server profile url: " + tls_client_profile_url)
 
 
-    # Finally, we can actually make the REST call to get the Default Gateway Service registered
+#     # Finally, we can actually make the REST call to get the Default Gateway Service registered
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/gateway-services'
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/gateway-services'
+    
+#     # Create the data object
+#     data = {}
+#     data['name'] = "default-gateway-service"
+#     data['title'] = "Default Gateway Service"
+#     data['summary'] = "Default Gateway Service that comes out of the box with API Connect Cluster v10"
+#     data['endpoint'] = 'https://' + environment_config["APIC_GATEWAY_MANAGER_URL"]
+#     data['api_endpoint_base'] = 'https://' + environment_config["APIC_GATEWAY_URL"]
+#     data['tls_client_profile_url'] = tls_client_profile_url
+#     data['gateway_service_type'] = 'datapower-api-gateway'
+#     visibility = {}
+#     visibility['type'] = 'public'
+#     data['visibility'] = visibility
+#     sni = []
+#     sni_inner={}
+#     sni_inner['host'] = '*'
+#     sni_inner['tls_server_profile_url'] = tls_server_profile_url
+#     sni.append(sni_inner)
+#     data['sni'] = sni
+#     data['integration_url'] = datapower_api_gateway_url
+
+#     if DEBUG:
+#         print(info(6) + "This is the data object:")
+#         print(info(6), data)
+#         print(info(6) + "This is the JSON dump:")
+#         print(info(6), json.dumps(data))
+
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
+
+#     if response.status_code != 201:
+#           raise Exception("Return code for registering the Default Gateway Service isn't 201. It is " + str(response.status_code))
+
+
+###################################################
+# Step 7 - Register the Default Analytics Service #
+###################################################
+
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/analytics-services'
     
     # Create the data object
     data = {}
-    data['name'] = "default-gateway-service"
-    data['title'] = "Default Gateway Service"
-    data['summary'] = "Default Gateway Service that comes out of the box with API Connect Cluster v10"
-    data['endpoint'] = 'https://' + environment_config["APIC_GATEWAY_MANAGER_URL"]
-    data['api_endpoint_base'] = 'https://' + environment_config["APIC_GATEWAY_URL"]
-    data['tls_client_profile_url'] = tls_client_profile_url
-    data['gateway_service_type'] = 'datapower-api-gateway'
-    visibility = {}
-    visibility['type'] = 'public'
-    data['visibility'] = visibility
-    sni = []
-    sni_inner={}
-    sni_inner['host'] = '*'
-    sni_inner['tls_server_profile_url'] = tls_server_profile_url
-    sni.append(sni_inner)
-    data['sni'] = sni
-    data['integration_url'] = datapower_api_gateway_url
+    data['name'] = "default-analytics-service"
+    data['title'] = "Default Analytics Service"
+    data['summary'] = "Default Analytics Service that comes out of the box with API Connect Cluster v10"
+    data['endpoint'] = 'https://' + environment_config["APIC_ANALYTICS_CONSOLE_URL"]
 
     if DEBUG:
-        print(info(6) + "This is the data object:")
-        print(info(6), data)
-        print(info(6) + "This is the JSON dump:")
-        print(info(6), json.dumps(data))
+        print(info(7) + "This is the data object:")
+        print(info(7), data)
+        print(info(7) + "This is the JSON dump:")
+        print(info(7), json.dumps(data))
 
     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
 
     if response.status_code != 201:
-          raise Exception("Return code for registering the Default Gateway Service isn't 201. It is " + str(response.status_code))
+          raise Exception("Return code for registering the Default Analytics Service isn't 201. It is " + str(response.status_code))
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
