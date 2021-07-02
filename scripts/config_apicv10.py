@@ -20,6 +20,10 @@ try:
 # Step 1 - Get the IBM API Connect Toolkit credentials and environment configuration #
 ######################################################################################
 
+    print(info(1) + "######################################################################################")
+    print(info(1) + "# Step 1 - Get the IBM API Connect Toolkit credentials and environment configuration #")
+    print(info(1) + "######################################################################################")
+
     toolkit_credentials = utils.get_toolkit_credentials(os.environ["CONFIG_FILES_DIR"])
     environment_config = utils.get_env_config(os.environ["CONFIG_FILES_DIR"])
     if DEBUG:
@@ -33,6 +37,10 @@ try:
 ###############################################################
 # Step 2 - Get the IBM API Connect Cloud Manager Bearer Token #
 ###############################################################
+
+    print(info(2) + "###############################################################")
+    print(info(2) + "# Step 2 - Get the IBM API Connect Cloud Manager Bearer Token #")
+    print(info(2) + "###############################################################")
     
     admin_bearer_token = utils.get_bearer_token(environment_config["APIC_ADMIN_URL"],
                                                     "admin",
@@ -48,6 +56,10 @@ try:
 #################################
 # Step 3 - Get the Admin org ID #
 #################################
+
+    print(info(3) + "#################################")
+    print(info(3) + "# Step 3 - Get the Admin org ID #")
+    print(info(3) + "#################################")
     
     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
 
@@ -69,6 +81,10 @@ try:
 # ####################################
 # # Step 4 - Create the Email Server #
 # ####################################
+
+#     print(info(4) + "####################################")
+#     print(info(4) + "# Step 4 - Create the Email Server #")
+#     print(info(4) + "####################################")
     
 #     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/mail-servers'
     
@@ -103,6 +119,10 @@ try:
 # # Step 5 - Sender and Email Server Configuration #
 # ##################################################
 
+#     print(info(5) + "##################################################")
+#     print(info(5) + "# Step 5 - Sender and Email Server Configuration #")
+#     print(info(5) + "##################################################")
+
 #     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/settings'
     
 #     # Create the data object
@@ -128,6 +148,10 @@ try:
 # #################################################
 # # Step 6 - Register the Default Gateway Service #
 # #################################################
+
+#     print(info(6) + "#################################################")
+#     print(info(6) + "# Step 6 - Register the Default Gateway Service #")
+#     print(info(6) + "#################################################")
 
 #     # First, we need to get the Datapower API Gateway instances details
 
@@ -223,6 +247,10 @@ try:
 # # Step 7 - Register the Default Analytics Service #
 # ###################################################
 
+#     print(info(7) + "###################################################")
+#     print(info(7) + "# Step 7 - Register the Default Analytics Service #")
+#     print(info(7) + "###################################################")
+
 #     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/analytics-services'
     
 #     # Create the data object
@@ -251,6 +279,10 @@ try:
 # # Step 8 - Associate Default Analytics Service with Default Gateway Service #
 # #############################################################################
 
+#     print(info(8) + "#############################################################################")
+#     print(info(8) + "# Step 8 - Associate Default Analytics Service with Default Gateway Service #")
+#     print(info(8) + "#############################################################################")
+
 #     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/gateway-services/default-gateway-service'
     
 #     # Create the data object
@@ -268,35 +300,112 @@ try:
 #     if response.status_code != 200:
 #           raise Exception("Return code for associating the Default Analytics Service with the Default Gateway Service isn't 200. It is " + str(response.status_code))
 
-################################################
-# Step 9 - Register the Default Portal Service #
-################################################
+# ################################################
+# # Step 9 - Register the Default Portal Service #
+# ################################################
 
-    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/portal-services'
+#     print(info(9) + "################################################")
+#     print(info(9) + "# Step 9 - Register the Default Portal Service #")
+#     print(info(9) + "################################################")
+
+#     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/orgs/' + admin_org_id + '/availability-zones/availability-zone-default/portal-services'
     
+#     # Create the data object
+#     data = {}
+#     data['title'] = "Default Portal Service"
+#     data['name'] = "default-portal-service"
+#     data['summary'] = "Default Portal Service that comes out of the box with API Connect Cluster v10"
+#     data['endpoint'] = 'https://' + environment_config["APIC_PORTAL_DIRECTOR_URL"]
+#     data['web_endpoint_base'] = 'https://' + environment_config["APIC_PORTAL_WEB_URL"]
+#     visibility = {}
+#     visibility['group_urls'] = None
+#     visibility['org_urls'] = None
+#     visibility['type'] = 'public'
+#     data['visibility'] = visibility
+
+#     if DEBUG:
+#         print(info(9) + "This is the data object:")
+#         print(info(9), data)
+#         print(info(9) + "This is the JSON dump:")
+#         print(info(9), json.dumps(data))
+
+#     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
+
+#     if response.status_code != 201:
+#           raise Exception("Return code for registering the Default Portal Service isn't 201. It is " + str(response.status_code))
+
+############################################
+# Step 10 - Create a Provider Organization #
+############################################
+
+    print(info(10) + "############################################")
+    print(info(10) + "# Step 10 - Create a Provider Organization #")
+    print(info(10) + "############################################")
+
+    # First, we need to get the user registries so that we can create a new user who will be the Provider Organization Owner
+
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/settings/user-registries'
+
+    response = api_calls.make_api_call(url, admin_bearer_token, 'get')
+
+    if response.status_code != 200:
+          raise Exception("Return code for retrieving the user registries isn't 200. It is " + str(response.status_code))
+    
+    provider_user_registry_default_url = response.json()['provider_user_registry_default_url']
+    if DEBUG:
+        print(info(10) + "Default Provider User Registry url: " + provider_user_registry_default_url)
+
+    # Then, we need to register the user that will be the Provider Organization owner
+
+    url = provider_user_registry_default_url + '/users'
+
     # Create the data object
+    # Ideally this could also be loaded from a sealed secret.
+    # Using defaults for now.
     data = {}
-    data['title'] = "Default Portal Service"
-    data['name'] = "default-portal-service"
-    data['summary'] = "Default Portal Service that comes out of the box with API Connect Cluster v10"
-    data['endpoint'] = 'https://' + environment_config["APIC_PORTAL_DIRECTOR_URL"]
-    data['web_endpoint_base'] = 'https://' + environment_config["APIC_PORTAL_WEB_URL"]
-    visibility = {}
-    visibility['group_urls'] = None
-    visibility['org_urls'] = None
-    visibility['type'] = 'public'
-    data['visibility'] = visibility
+    data['username'] = 'testorgadmin'
+    data['email'] = 'test@test.com'
+    data['first_name'] = 'A_Name'
+    data['last_name'] = 'A_Last_Name'
+    data['password'] = 'passw0rd'
 
     if DEBUG:
-        print(info(9) + "This is the data object:")
-        print(info(9), data)
-        print(info(9) + "This is the JSON dump:")
-        print(info(9), json.dumps(data))
+        print(info(10) + "This is the data object:")
+        print(info(10), data)
+        print(info(10) + "This is the JSON dump:")
+        print(info(10), json.dumps(data))
 
     response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
 
     if response.status_code != 201:
-          raise Exception("Return code for registering the Default Portal Service isn't 201. It is " + str(response.status_code))
+          raise Exception("Return code for registering the provider organization owner user isn't 201. It is " + str(response.status_code))
+    
+    owner_url = response.json()['url']
+    if DEBUG:
+        print(info(10) + "Provider Organization Owner url: " + owner_url)
+    
+    # Finally, we can create the Provider Organization with the previous owner
+
+    url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
+
+    # Create the data object
+    # Ideally this could also be loaded from a sealed secret.
+    # Using defaults for now.
+    data = {}
+    data['title'] = 'Test Org'
+    data['name'] = 'test-org'
+    data['owner_url'] = owner_url
+
+    if DEBUG:
+        print(info(10) + "This is the data object:")
+        print(info(10), data)
+        print(info(10) + "This is the JSON dump:")
+        print(info(10), json.dumps(data))
+
+    response = api_calls.make_api_call(url, admin_bearer_token, 'post', data)
+
+    if response.status_code != 201:
+          raise Exception("Return code for creating the provider organization isn't 201. It is " + str(response.status_code))
 
 except Exception as e:
     raise Exception("[ERROR] - Exception in " + FILE_NAME + ": " + repr(e))
