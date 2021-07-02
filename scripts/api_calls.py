@@ -41,6 +41,11 @@ def make_api_call(url, bearer_token, verb, data=None):
                 response = s.put(url, headers=reqheaders, json=data, verify=False, timeout=300)
             else:
                 response = s.put(url, headers=reqheaders, verify=False, timeout=300)
+        if verb == "patch":
+            if data:
+                response = s.patch(url, headers=reqheaders, json=data, verify=False, timeout=300)
+            else:
+                response = s.patch(url, headers=reqheaders, verify=False, timeout=300)
 
         if DEBUG:
             print(INFO + "This is the request made:")
