@@ -13,21 +13,17 @@ spec:
   description: >-
     This task will configure your recent API Connect Cluster v10 instance installation.
   params:
-    - name: git-url
+    - name: git-apic-pipeline-git-url
       type: string
-      description: GitHub URL for the APIC utils.
-    - name: git-revision
+      description: GitHub url where the pipeline scripts are stored. These are the scripts the pipeline will execute.
+    - name: git-apic-pipeline-git-branch
       type: string
       default: master
-      description: Git Revision to work with.
+      description: Github branch for the pipeline scripts.
     - name: source-dir
       type: string
       default: /source
       description: Path where an empty directory will be mounted to which will serve as the source location for all the task steps.
-    - name: tools-image
-      type: string
-      default: quay.io/ibmgaragecloud/ibmcloud-dev:v2.0.4
-      description: Docker image with the tools needed for executing this task.
     - name: python-image
       type: string
       default: python:3.9.5
@@ -40,6 +36,10 @@ spec:
       type: string
       default: prod
       description: OpenShift project where your IBM API Connect Cluster v10 has been deployed into.
+    - name: debug
+      type: string
+      default: "True"
+      description: Debug flag
   volumes:
     - name: source
       emptyDir: {}
@@ -48,44 +48,16 @@ spec:
       - name: source
         mountPath: $(params.source-dir)
     envFrom:
-      - configMapRef:
-          name: apic-pipeline-git
       - secretRef:
           name: apic-pipeline-git
       - secretRef:
-          name: apic-pipeline-mgmt
+          name: apic-config-email-server
       - secretRef:
-          name: apic-pipeline-toolkit
+          name: apic-pipeline-provider-org
+    env:
+      - name: CONFIG_FILES_DIR
+        value: $(params.source-dir)/config
   steps:
-    # - name: config
-    #   image: quay.io/ibmgaragecloud/alpine-git
-    #   script: |
-    #     set +x
-    #     echo "*****************"
-    #     echo "** Step config **"
-    #     echo "*****************"
-    #     echo
-    #     echo "API Connect Products And APIs pipeline"
-    #     echo "--------------------------------------"
-    #     echo
-    #     echo "API Connect Pipelines GitHub repository:                       $GIT_PIPELINE_SCRIPTS_URL"
-    #     echo "API Connect Pipelines GitHub repository branch:                $GIT_PIPELINE_SCRIPTS_BRANCH"
-    #     echo "API Connect Products and APIs GitHub repository:               $GIT_PRODUCTS_APIS_URL"
-    #     echo "API Connect Products and APIs GitHub repository branch:        $GIT_PRODUCTS_APIS_BRANCH"
-    #     echo "API Connect Products and APIs GitHub repository Products path: $GIT_PRODUCTS_PATH"
-    #     echo "API Connect Products and APIs GitHub repository APIs path:     $GIT_APIS_PATH"
-    #     echo
-    #     echo "API Connect Products to be published"
-    #     echo "------------------------------------"
-    #     if [[ -z "$PRODUCT_NAMES" ]]; then echo "All"; else echo "$PRODUCT_NAMES"; fi
-    #     echo
-    #     echo "API Connect Instance"
-    #     echo "--------------------"
-    #     echo "Environment:                       $ENV"
-    #     echo "API Connect Platform Base url:     $APIC_MGMT_PLATFORM_BASE_URL"
-    #     echo "API Connect Provider Organization: $APIC_MGMT_PROVIDER_ORG"
-    #     echo "API Connect Catalog:               $APIC_MGMT_CATALOG_NAME"
-    #     echo "API Connect Gateway Base url:      $APIC_GATEWAY_BASE_URL"
     - name: git-clone
       image: quay.io/ibmgaragecloud/alpine-git
       script: |
@@ -95,46 +67,23 @@ spec:
         echo "********************"
         echo 
         if [[ -n "${GIT_USERNAME}" ]] && [[ -n "${GIT_PRIV_TOKEN}" ]]; then
-            git clone "$(echo $(params.git-url) | awk -F '://' '{print $1}')://${GIT_USERNAME}:${GIT_PRIV_TOKEN}@$(echo $(params.git-url) | awk -F '://' '{print $2}')" $(params.source-dir)
+            git clone "$(echo $(params.git-apic-pipeline-git-url) | awk -F '://' '{print $1}')://${GIT_USERNAME}:${GIT_PRIV_TOKEN}@$(echo $(params.git-apic-pipeline-git-url) | awk -F '://' '{print $2}')" $(params.source-dir)
         else
-            git clone $(params.git-url) $(params.source-dir)
+            git clone $(params.git-apic-pipeline-git-url) $(params.source-dir)
         fi
         cd $(params.source-dir)
-        git checkout $(params.git-revision)
+        git checkout $(params.git-apic-pipeline-git-branch)
     - name: initialize-config
       image: $(params.oc-cli-image)
       workingDir: $(params.source-dir)
       script: |
-        # set +x
+        set +x
         echo "****************************"
         echo "** Step initialize-config **"
         echo "****************************"
-        # Make a configuration files directory
-        mkdir config
-        cd config
-        echo CONFIG_FILES_DIR=$PWD >> config.sh
-        # Get the needed URLs for the automation
-        APIC_ADMIN_URL=`oc get routes -n $(params.apic-project) | grep admin |  awk '{print $2}'`
-        APIC_API_MANAGER_URL=`oc get routes -n $(params.apic-project) | grep api-manager |  awk '{print $2}'`
-        echo "APIC_ADMIN_URL=${APIC_ADMIN_URL}" >> config.sh
-        echo "APIC_API_MANAGER_URL=${APIC_API_MANAGER_URL}" >> config.sh
-        # Get the APIC CLI
-        HTTP_CODE=`curl -s --write-out '%{http_code}' https://${APIC_ADMIN_URL}/client-downloads/toolkit-linux.tgz --insecure --output toolkit-linux.tgz`
-        if [[ "${HTTP_CODE}" != "200" ]]
-        then 
-          echo "[ERROR] - An error ocurred downloading the APIC toolkit to get the APIC CLI"
-          exit 1
-        fi
-        tar -zxvf toolkit-linux.tgz
-        chmod +x apic-slim
-        # Get the toolkit credentials
-        APIC_ADMIN_PASSWORD=$(oc get secret $(oc get secrets -n $(params.apic-project) | grep mgmt-admin-pass | awk '{print $1}') -n $(params.apic-project) -o jsonpath='{.data.password}' | base64 -D)
-        echo "APIC_ADMIN_PASSWORD=${APIC_ADMIN_PASSWORD}" >> config.sh
-        ./apic-slim login --server ${APIC_ADMIN_URL} --username admin --password ''"${APIC_ADMIN_PASSWORD}"'' --realm admin/default-idp-1
-        ./apic-slim cloud-settings:toolkit-credentials-list --server ${APIC_ADMIN_URL} --format json > toolkit-creds.json
-        echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        cat config.sh
-        cat toolkit-creds.json
+        if [[ "$(params.debug)" == "True" ]]; then echo "DEBUG is enabled"; export DEBUG=True; fi
+        cd scripts
+        sh config.sh $(params.apic-project)
     - name: config-apic
       image: $(params.python-image)
       workingDir: $(params.source-dir)
@@ -143,76 +92,8 @@ spec:
         echo "**********************"
         echo "** Step config-apic **"
         echo "**********************"
-        source config/config.sh
+        export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+        python3 -mpip install requests > /dev/null
+        if [ "$(params.debug)" = "True" ]; then echo "DEBUG is enabled"; export DEBUG=True; fi
         cd scripts
         python3 config_apicv10.py
-    # - name: download-products
-    #   image: $(params.python-image)
-    #   workingDir: $(params.source-dir)
-    #   script: |
-    #     set +x
-    #     echo "****************************"
-    #     echo "** Step download-products **"
-    #     echo "****************************"
-    #     cd scripts
-    #     python3 download_product_files_from_git.py
-    # - name: download-apis
-    #   image: $(params.python-image)
-    #   workingDir: $(params.source-dir)
-    #   script: |
-    #     set +x
-    #     echo "************************"
-    #     echo "** Step download-apis **"
-    #     echo "************************"
-    #     # Pre-req for parsing YAML files
-    #     python3 -mpip install PyYAML > /dev/null
-    #     cd scripts
-    #     python3 download_api_files_from_git.py
-    # - name: replace-placeholders
-    #   image: $(params.python-image)
-    #   workingDir: $(params.source-dir)
-    #   script: |
-    #     set +x
-    #     echo "*******************************"
-    #     echo "** Step replace-placeholders **"
-    #     echo "*******************************"
-    #     # Pre-req for parsing YAML files
-    #     python3 -mpip install PyYAML > /dev/null
-    #     cd scripts
-    #     python3 replace_api_yaml_env_param.py
-    # - name: publish-products
-    #   image: $(params.python-image)
-    #   workingDir: $(params.source-dir)
-    #   script: |
-    #     set +x
-    #     echo "***************************"
-    #     echo "** Step publish-products **"
-    #     echo "***************************"
-    #     # Pre-req for parsing YAML files and create HTTP requests
-    #     export PYTHONWARNINGS="ignore:Unverified HTTPS request"
-    #     python3 -mpip install PyYAML requests > /dev/null
-    #     cd scripts
-    #     python3 apic_platform_publish_to_catalog.py
-    # - name: test-apis
-    #   image: $(params.python-image)
-    #   workingDir: $(params.source-dir)
-    #   script: |
-    #     set +x
-    #     echo "********************"
-    #     echo "** Step test-apis **"
-    #     echo "********************"
-    #     # Pre-req for parsing YAML files and create HTTP requests
-    #     export PYTHONWARNINGS="ignore:Unverified HTTPS request"
-    #     python3 -mpip install PyYAML requests > /dev/null
-    #     cd scripts
-    #     python3 test_apic_apis.py
-    # - name: print-audit
-    #   image: $(params.python-image)
-    #   workingDir: $(params.source-dir)
-    #   script: |
-    #     set +x
-    #     echo "**********************"
-    #     echo "** Step print-audit **"
-    #     echo "**********************"
-    #     cd scripts
-    #     python3 print_audit.py

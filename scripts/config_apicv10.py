@@ -364,14 +364,14 @@ try:
     url = provider_user_registry_default_url + '/users'
 
     # Create the data object
-    # Ideally this could also be loaded from a sealed secret.
+    # Ideally this should be loaded from a sealed secret.
     # Using defaults for now.
     data = {}
-    data['username'] = 'testorgadmin'
-    data['email'] = 'test@test.com'
-    data['first_name'] = 'A_Name'
-    data['last_name'] = 'A_Last_Name'
-    data['password'] = 'passw0rd'
+    data['username'] = os.environ["PROV_ORG_OWNER_USERNAME"]
+    data['email'] = os.environ["PROV_ORG_OWNER_EMAIL"]
+    data['first_name'] = os.environ["PROV_ORG_OWNER_FIRST_NAME"]
+    data['last_name'] = os.environ["PROV_ORG_OWNER_LAST_NAME"]
+    data['password'] = os.environ["PROV_ORG_OWNER_PASSWORD"]
 
     if DEBUG:
         print(info(10) + "This is the data object:")
@@ -393,11 +393,11 @@ try:
     url = 'https://' + environment_config["APIC_ADMIN_URL"] + '/api/cloud/orgs'
 
     # Create the data object
-    # Ideally this could also be loaded from a sealed secret.
+    # Ideally this should be loaded from a sealed secret.
     # Using defaults for now.
     data = {}
-    data['title'] = 'Test Org'
-    data['name'] = 'test-org'
+    data['title'] = os.environ["PROV_ORG_TITLE"]
+    data['name'] = os.environ["PROV_ORG_NAME"]
     data['owner_url'] = owner_url
 
     if DEBUG:
@@ -471,7 +471,7 @@ try:
     if response.status_code != 200:
           raise Exception("Return code for getting the Sandbox catalog ID isn't 200. It is " + str(response.status_code))
     for catalog in response.json()['results']:
-        if catalog['name'] == "sandbox":
+        if catalog['name'] == os.environ["PROV_ORG_CATALOG_NAME"]:
             found = True
             catalog_id = catalog['id']
     if not found:

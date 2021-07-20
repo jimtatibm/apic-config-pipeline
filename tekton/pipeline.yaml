@@ -7,7 +7,14 @@ spec:
   tasks:
     - name: apic-post-install-config
       params:
-      - name: git-url
-        value: 'https://github.ibm.com/ALMARAZJ/apic-config.git'
+      # GitHub url where the pipeline scripts are stored. These are the scripts the pipeline will execute.
+      - name: git-apic-pipeline-git-url
+        value: 'https://github.ibm.com/<GIT_ORG>/apic-pipeline.git'
+      # Github branch for the pipeline scripts.
+      - name: git-apic-pipeline-git-branch
+        value: 'master'
+      # Debug flag
+      - name: debug
+        value: "True"
       taskRef:
         name: apic-post-install-config
